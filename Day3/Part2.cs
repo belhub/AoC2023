@@ -1,13 +1,16 @@
+﻿using System.Runtime.InteropServices;
+
 class Program
 {
     class Numbers
     {
         public int MyNumber { get; set; }
+        public required int PositionX { get; set; }
         public required List<int> PositionY { get; set; }
     }
 
-    static List<List<char>> matrix = new List<List<char>>();
-    static List<List<Numbers>> numbersList = new();
+    static List<List<char>> matrix = new();
+    static List<Numbers> numbersWithCoo = new();
     static int sum = 0;
     static void ReadFile(string FileName)
     {
@@ -16,119 +19,102 @@ class Program
         {
             while ((line = file.ReadLine()) != null)
             {
-                char[] charArr = line.ToCharArray();
-                List<char> listChar = new List<char>(charArr);
+                List<char> listChar = line.ToCharArray().ToList();
                 matrix.Add(listChar);
             }
         }
     }
-    static void GetNumbers()
+
+    static void TakeNumbers()
     {
-        for (int i = 0; i < matrix.Count; i++)
+        var list = matrix.SelectMany((row, i) =>
+                row.Select((cha, j) => new { MyNumber = cha, PositionX = i, PositionY = j })
+            .Where(item => char.IsNumber(item.MyNumber))
+            .OrderBy(data => data.PositionX).ThenBy(data => data.PositionY)).ToList();
+
+        var numbersData = list
+        .Select((num, index) => new { First = num, Second = list.ElementAtOrDefault(index + 1), Third = list.ElementAtOrDefault(index + 2) }).ToList();
+
+        //for który będzie wyłaniać liczby z ich współrzędnymi
+        for (int i = 0; i < numbersData.Count; i++)
         {
-            List<Numbers> numbersToList = new();
-            for (int j = 0; j < matrix[i].Count; j++)
+            int number = 0;
+            string numStr = "";
+            List<int> ys = new();
+            if (numbersData[i].First.PositionX == numbersData[i]?.Second?.PositionX && numbersData[i].First.PositionX == numbersData[i]?.Third?.PositionX)
             {
-                int length = 0;
-
-                if (char.IsNumber(matrix[i][j]))
+                if (numbersData[i].First.PositionY == numbersData[i].Second.PositionY - 1 && numbersData[i].First.PositionY == numbersData[i].Third.PositionY - 2)
                 {
-                    List<int> number = new List<int>();
-                    List<int> indexList = new();
-                    for (int index = 0; index <= 2; index++)
-                    {
-                        if (char.IsNumber(matrix[i][j + index]))
-                        {
-                            number.Add(int.Parse(matrix[i][j + index].ToString()));
-                            indexList.Add(j + index);
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                    int numberInt = int.Parse(string.Join("", number));
-                    length = number.Count;
-                    numbersToList.Add(new Numbers { MyNumber = numberInt, PositionY = indexList });
+                    numStr = numbersData[i].First.MyNumber.ToString() + numbersData[i].Second.MyNumber.ToString() + numbersData[i].Third.MyNumber.ToString();
+                    ys.Add(numbersData[i].First.PositionY);
+                    ys.Add(numbersData[i].Second.PositionY);
+                    ys.Add(numbersData[i].Third.PositionY);
+                    i += 2;
                 }
-                j += length;
+                else if (numbersData[i].First.PositionY == numbersData[i].Second.PositionY - 1)
+                {
+                    numStr = new(numbersData[i].First.MyNumber.ToString() + numbersData[i].Second.MyNumber.ToString());
+                    ys.Add(numbersData[i].First.PositionY);
+                    ys.Add(numbersData[i].Second.PositionY);
+                    i++;
+                }
+                else
+                {
+                    numStr = new(numbersData[i].First.MyNumber.ToString());
+                    ys.Add(numbersData[i].First.PositionY);
+                }
+                number = int.Parse(numStr);
             }
-            numbersList.Add(numbersToList);
-
-        }
-    }
-    static void CheckMatrix()
-    {
-        for (int i = 0; i < matrix.Count; i++)
-        {
-            for (int j = 0; j < matrix[i].Count; j++)
+            else if (numbersData[i].First.PositionX == numbersData[i]?.Second?.PositionX)
             {
-                if (matrix[i][j] == '*')
+                if (numbersData[i].First.PositionY == numbersData[i].Second.PositionY - 1)
                 {
-                    List<int> numbersToMultiply = new();
-                    if (j != 0 && char.IsNumber(matrix[i][j - 1]) || (j < matrix[i].Count - 1 && char.IsNumber(matrix[i][j + 1]))) //boki 
-                    {
-                        List<int> number1 = new List<int>();
-                        List<int> number2 = new List<int>();
-                        bool checkLeft = true;
-                        bool checkRight = true;
-                        for (int index = 1; index <= 3; index++)
-                        {
-                            if (checkLeft && char.IsNumber(matrix[i][j - index]))
-                            {
-                                number1.Insert(0, int.Parse(matrix[i][j - index].ToString()));
-                            }
-                            else
-                            {
-                                checkLeft = false;
-                            }
-
-                            if (checkRight && char.IsNumber(matrix[i][j + index]))
-                            {
-                                number2.Add(int.Parse(matrix[i][j + index].ToString()));
-                            }
-                            else
-                            {
-                                checkRight = false;
-                            }
-                        }
-                        if (number1.Count > 0) { numbersToMultiply.Add(int.Parse(string.Join("", number1))); }
-                        if (number2.Count > 0) { numbersToMultiply.Add(int.Parse(string.Join("", number2))); }
-                    }
-                    for (int index = 0; index <= 2; index++)
-                    {
-                        if (i != 0 && numbersList[i - 1].Any(number => number.PositionY.Contains(j - 1 + index)))//góra
-                        {
-                            var matchingNum1 = numbersList[i - 1].FirstOrDefault(number => number.PositionY.Contains(j - 1 + index));
-                            numbersToMultiply.Add(matchingNum1.MyNumber);
-                        }
-                        if (i < matrix[i].Count - 1 && numbersList[i + 1].Any(number => number.PositionY.Contains(j - 1 + index)))//dół
-                        {
-                            var matchingNum2 = numbersList[i + 1].FirstOrDefault(number => number.PositionY.Contains(j - 1 + index));
-                            numbersToMultiply.Add(matchingNum2.MyNumber);
-                        }
-                    }
-                    int numToAdd = 0;
-                    if (numbersToMultiply.Distinct().Count() > 1)
-                    {
-                        numToAdd = 1;
-                        foreach (var num in numbersToMultiply.Distinct())
-                        {
-                            numToAdd *= num;
-                        }
-                    }
-                    sum += numToAdd;
+                    numStr = new(numbersData[i].First.MyNumber.ToString() + numbersData[i].Second.MyNumber.ToString());
+                    ys.Add(numbersData[i].First.PositionY);
+                    ys.Add(numbersData[i].Second.PositionY);
+                    i++;
                 }
+                else
+                {
+                    numStr = new(numbersData[i].First.MyNumber.ToString());
+                    ys.Add(numbersData[i].First.PositionY);
+                }
+                number = int.Parse(numStr);
             }
+            else
+            {
+                numStr = new(numbersData[i].First.MyNumber.ToString());
+                ys.Add(numbersData[i].First.PositionY);
+                number = int.Parse(numStr);
+            }
+            numbersWithCoo.Add(new Numbers { MyNumber = number, PositionX = numbersData[i].First.PositionX, PositionY = ys });
         }
     }
 
+    static void CheckChars()
+    {
+        var chars = matrix.SelectMany((row, i) =>
+            row.Select((cha, j) => new { Char = cha, PosX = i, PosY = j })
+                .Where(data => data.Char == '*')).ToList();
 
+        foreach (var cha in chars)
+        {
+            var sumListss = numbersWithCoo.Where(nums =>
+               (cha.PosX == nums.PositionX || cha.PosX == nums.PositionX - 1 || cha.PosX == nums.PositionX + 1) &&
+               (nums.PositionY.Contains(cha.PosY) || nums.PositionY.Contains(cha.PosY + 1) || nums.PositionY.Contains(cha.PosY - 1)))
+                .Select(nums => nums.MyNumber);
+
+            if (sumListss.Count() > 1)
+            {
+                sum += sumListss.First() * sumListss.Last();
+            }
+        }
+    }
     static void Main()
     {
         ReadFile("input.txt");
-        GetNumbers();
-        CheckMatrix();
+        TakeNumbers();
+        CheckChars();
         Console.WriteLine("OutputSum: " + sum);
     }
 }
