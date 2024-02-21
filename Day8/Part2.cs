@@ -26,18 +26,15 @@ class Program
             while ((line = file.ReadLine()) != null)
             {
                 if (way == null) { way = line.ToCharArray(); }
-                else
-                {
-                    string[] puzzleString = line.Split("=");
-                    if (puzzleString.Length > 1)
-                    {
-                        string stringWithoutBrackets = puzzleString[1].Replace("(", "").Replace(")", "").Replace(" ", "");
-                        string[] puzzleValue = stringWithoutBrackets.Split(",");
-                        puzzle.Add(puzzleString[0].Trim(), puzzleValue);
-                    }
-                }
+                else { if (line.Length > 0) { AddToDictionary(line); } }
             }
         }
+    }
+
+    static void AddToDictionary(string input)
+    {
+        string[] toDictionary = input.Replace("(", "").Replace(")", "").Replace(" ", "").Split('=', ',');
+        puzzle.Add(toDictionary[0].Trim(), new string[] { toDictionary[1], toDictionary[2] });
     }
 
     static List<string> PreparePuzzle()
@@ -55,8 +52,8 @@ class Program
 
     static long PuzzleWay(List<string> keysToFind)
     {
-        List<int > loopNumber = new List<int>(); // ile zajęło znalezienie rozwiązania dla klucza
-        int index = 0; 
+        List<int> loopNumber = new List<int>(); // ile zajęło znalezienie rozwiązania dla klucza
+        int index = 0;
         while (loopNumber.Count < keysToFind.Count)
         {
             string keyToFind = keysToFind[index];
@@ -85,7 +82,7 @@ class Program
         foreach (var item in loopNumber)
         {
             Console.WriteLine(item);
-            outputSum*= item;
+            outputSum *= item;
         }
         return returnResult;
     }
@@ -99,21 +96,21 @@ class Program
         }
         return number1;
     }
-    static long NwdForOne( long number1, long number2)
+    static long NwdForOne(long number1, long number2)
     {
         number1 = Math.Abs(number1);
         number2 = Math.Abs(number2);
-        return (number1*number2)/Nwd(number1,number2);
+        return (number1 * number2) / Nwd(number1, number2);
     }
 
     static long NwdForMany(List<int> listOfCounters)
     {
         long result = listOfCounters[0];
-        for(int i = 1; i < listOfCounters.Count; i++)
+        for (int i = 1; i < listOfCounters.Count; i++)
         {
-            Console.Write(result + ", " +listOfCounters[i]);
+            Console.Write(result + ", " + listOfCounters[i]);
             result = NwdForOne(result, listOfCounters[i]);
-            Console.WriteLine(" = "+result);
+            Console.WriteLine(" = " + result);
 
         }
         return result;

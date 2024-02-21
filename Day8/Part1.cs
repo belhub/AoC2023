@@ -24,19 +24,17 @@ class Program
             while ((line = file.ReadLine()) != null)
             {
                 if (way == null) { way = line.ToCharArray(); }
-                else
-                {
-                    string[] puzzleString = line.Split("=");
-                    if (puzzleString.Length > 1)
-                    {
-                        string stringWithoutBrackets = puzzleString[1].Replace("(", "").Replace(")", "").Replace(" ", "");
-                        string[] puzzleValue = stringWithoutBrackets.Split(",");
-                        puzzle.Add(puzzleString[0].Trim(), puzzleValue);
-                    }
-                }
+                else { if (line.Length > 0) { AddToDictionary(line); } }
             }
         }
     }
+
+    static void AddToDictionary(string input)
+    {
+        string[] toDictionary = input.Replace("(", "").Replace(")", "").Replace(" ", "").Split('=', ',');
+        puzzle.Add(toDictionary[0].Trim(), new string[] { toDictionary[1], toDictionary[2] });
+    }
+
     static void PuzzleWay()
     {
         string keyToFind = "AAA";

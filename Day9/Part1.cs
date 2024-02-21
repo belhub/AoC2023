@@ -1,6 +1,6 @@
 ﻿class Program
 {
-    static List<List<int>> matrix = new List<List<int>>();
+    static List<List<int>> matrix = new();
     static int sum = 0;
     static void ReadFile(string FileName)
     {
@@ -10,12 +10,7 @@
             while ((line = file.ReadLine()) != null)
             {
                 string[] numbers = line.Split(" ");
-                List<int> rowInt = new();
-                foreach (var number in numbers)
-                {
-                    rowInt.Add(int.Parse(number));
-                }
-                matrix.Add(rowInt);
+                matrix.Add(new(numbers.Select(n => int.Parse(n))));
             }
         }
     }
@@ -28,23 +23,15 @@
             bool stopCondition = true;
             List<List<int>> historyList = new();
             List<int> firstLine = matrix[index];
-            int counter = 0;
             historyList.Add(firstLine);
 
             while (stopCondition)
             {
-                List<int> secondLine = new List<int>();
-                for (int i = 1; i < firstLine.Count; i++)
-                {
-                    int number = firstLine[i] - firstLine[i - 1];
-                    secondLine.Add(number);
-                }
-                firstLine = secondLine;
+                var second = firstLine.Select((f, index) => f - firstLine.ElementAtOrDefault(index - 1)).Skip(1).ToList();
+                firstLine = second;
                 historyList.Add(firstLine);
-                stopCondition = StopCondition(secondLine);
-                counter++;
+                stopCondition = StopCondition(second);
             }
-
             int resultNumber = 0;
             for (int i = historyList.Count - 1; i >= 0; i--)
             {
@@ -52,22 +39,12 @@
             }
             numbersToAdd.Add(resultNumber);
         }
-        foreach (var num in numbersToAdd)
-        {
-            sum += num;
-        }
-
+        sum = numbersToAdd.Sum();
     }
+
     static bool StopCondition(List<int> list)
     {
-        foreach (var num in list)
-        {
-            if (num != 0)
-            {
-                return true;
-            }
-        }
-        return false;
+        return !list.All(l => l == 0);
     }
 
     static void Main()
